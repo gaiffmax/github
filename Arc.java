@@ -1,4 +1,4 @@
-package Metrique;
+package metrique;
 /*****************************************************/
 import java.util.*;
 public class Arc implements Comparable {
@@ -54,12 +54,12 @@ public class Arc implements Comparable {
     }
     /** methode de comparaison necessaire pour implementer Comparable
 	Permet de rechercher un Arc dans un TreeSet **/
-    public int compareTo (Object O)  {  
-    	Arc A = (Arc) O ;  
-	if (this.from.id() == A.from().id() && this.to.id() == A.to().id())
+    public int compareTo (Object o)  {  
+    	Arc a = (Arc) o ;  
+	if (this.from.id() == a.from().id() && this.to.id() == a.to().id())
 	    return 0;
-	if (this.from.id() < A.from().id() || 
-	    this.from.id() == A.from().id() && this.to.id() < A.to().id())
+	if (this.from.id() < a.from().id() || 
+	    this.from.id() == a.from().id() && this.to.id() < a.to().id())
 	    return -1;    
 	return 1;
     }
@@ -71,22 +71,20 @@ public class Arc implements Comparable {
     public String toDot () {
 	String arc = this.toString();
 	// gestion des attributs dot
-	String label = "";
+	String etiquette = "";
 	if (this.label().length()!=0)
-	    label = "label="+this.label()+",";
-	String color="color="+this.color();
-	return arc+" ["+label+color+"]\n";	
+	    etiquette = "label="+this.label()+",";
+	String couleur="color="+this.color();
+	return arc+" ["+etiquette+couleur+"]\n";	
     }
     
-    /** methode d'affichage grammaire dot **/
-    public String toDot2 () {
-	System.out.println("test");
-	String arc = this.toString();
-	// gestion des attributs dot
-	String label = "";
-	if (this.label().length()!=0)
-	    label = "label="+this.label()+",";
-	String color="color="+this.color();
-	return arc+" ["+label+color+"]\n";	
+    @Override
+    public boolean equals(Object obj) {
+    	return super.equals(obj);
+    }
+    
+    @Override
+    public int hashCode() {
+    	return super.hashCode();
     }
 }// fin d'Arc

@@ -1,8 +1,9 @@
-package Metrique;
+package metrique;
 /*****************************************************/
 
 import java.util.*;
 import java.io.*;
+import java.util.Random;
 
 /**
  * Classe Graphe permettant de manipuler des graphes. Représentation par listes
@@ -10,41 +11,47 @@ import java.io.*;
  **/
 class Graphe {
 	/** ensemble de Node (ou NodeSet) **/
-	public TreeSet S;
+	private TreeSet s;
+	private static Random random = new Random();
+	
+	public static final String BLACK = "black";
+	public static final String BLUE = "blue";
+	public static final String RED = "red";
+	public static final String GREEN = "green";
 
 	/** constructeur **/
 	Graphe() {
-		this.S = new TreeSet();
+		this.s = new TreeSet();
 	}
 
 	/** accès à l'ensemble de Node **/
-	public TreeSet getS() {
-		return this.S;
+	public SortedSet getS() {
+		return this.s;
 	}
 
 	/** ajout d'un Node dans le graphe **/
 	public boolean addNode(Node N) {
-		return this.S.add(N);
+		return this.s.add(N);
 	}
 
 	/** test de l'existence d'un Node dans le graphe **/
 	public boolean containsNode(int i) {
-		return this.S.contains(new Node(i));
+		return this.s.contains(new Node(i));
 	}
 
 	/** suppression d'un Node dans le graphe **/
 	public boolean removeNode(Node N) {
-		if (!this.S.remove(N))
+		if (!this.s.remove(N))
 			return false;
 		for (Iterator I = N.succ().iterator(); I.hasNext();) {
 			Arc A = (Arc) I.next();
-			Node N2 = A.to();
-			N2.removePred(A);
+			Node n2 = A.to();
+			n2.removePred(A);
 		}
 		for (Iterator I = N.pred().iterator(); I.hasNext();) {
 			Arc A = (Arc) I.next();
-			Node N2 = A.from();
-			N2.removeSucc(A);
+			Node n2 = A.from();
+			n2.removeSucc(A);
 		}
 		return true;
 	}
@@ -52,7 +59,7 @@ class Graphe {
 	/** accès à un Node du graphe **/
 	public Node getNode(int i) {
 		if (this.containsNode(i))
-			for (Iterator I = this.S.iterator(); I.hasNext();) {
+			for (Iterator I = this.s.iterator(); I.hasNext();) {
 				Node N = (Node) I.next();
 				if (N.id() == i)
 					return N;
@@ -108,12 +115,12 @@ class Graphe {
 	}
 
 	public int nbNodes() {
-		return this.S.size();
+		return this.s.size();
 	}
 
 	public int nbArcs() {
 		int nb = 0;
-		for (Iterator I = S.iterator(); I.hasNext();) {
+		for (Iterator I = s.iterator(); I.hasNext();) {
 
 			Node N = (Node) I.next();
 			nb += N.succ().size();
@@ -123,7 +130,7 @@ class Graphe {
 
 	/* colorier tous les noeuds et arcs d'une meme couleur */
 	public void setColor(String color) {
-		for (Iterator I = S.iterator(); I.hasNext();) {
+		for (Iterator I = s.iterator(); I.hasNext();) {
 			Node N = (Node) I.next();
 			N.setColor(color);
 			for (Iterator J = N.succ().iterator(); J.hasNext();) {
@@ -140,7 +147,7 @@ class Graphe {
 		String arcs = "Arcs = {";
 		graph += "G --> " + this.nbNodes() + "Nodes \n";
 		graph += "       " + this.nbArcs() + "Arcs \n ";
-		for (Iterator I = S.iterator(); I.hasNext();) {
+		for (Iterator I = s.iterator(); I.hasNext();) {
 			Node N = (Node) I.next();
 			nodes += " " + N;
 			TreeSet succ = N.succ();
@@ -158,34 +165,37 @@ class Graphe {
 	/** methode d'affichage grammaire dot **/
 	public static void toDot(Graphe G, String filename) throws IOException {
 		FileOutputStream fich = new FileOutputStream(filename);
-		DataOutputStream out = new DataOutputStream(fich);
-
-		out.writeBytes("digraph G {\n");
-		String nodes = "";
-		String arcs = "";
-		// parcours de l'ensemble de Node
-		for (Iterator I = G.S.iterator(); I.hasNext();) {
-			Node N = (Node) I.next();
-			nodes += " " + N.toDot();
-			TreeSet succ = N.succ();
-			// parcours de l'ensemble des successeurs de N
-			for (Iterator J = succ.iterator(); J.hasNext();) {
-				Arc A = (Arc) J.next();
-
-				String arc = A.toString();
-				String S = "";
-				String label = "";
-				if (A.label().length() != 0)
-					label = "label=" + A.label() + ",";
-				String color = "color=" + A.color();
-				S += arc + " [" + label + color + "]\n";
-				arcs = arcs + " " + S;
+		try (DataOutputStream out = new DataOutputStream(fich)){
+			out.writeBytes("digraph G {\n");
+			StringBuilder string
+			String nodes = "";
+			String arcs = "";
+			// parcours de l'ensemble de Node
+			for (Iterator I = G.s.iterator(); I.hasNext();) {
+				Node N = (Node) I.next();
+				nodes += " " + N.toDot();
+				TreeSet succ = N.succ();
+				// parcours de l'ensemble des successeurs de N
+				for (Iterator J = succ.iterator(); J.hasNext();) {
+					Arc A = (Arc) J.next();
+					String arc = A.toString();
+					String S = "";
+					String label = "";
+					if (A.label().length() != 0)
+						label = "label=" + A.label() + ",";
+					String color = "color=" + A.color();
+					S += arc + " [" + label + color + "]\n";
+					StringBuilder stringbuilder = new StringBuilder("arcs");
+					stringbuilder.append(" ");
+					stringbuilder.append(S);
+				}
 			}
+			out.writeBytes(nodes);
+			out.writeBytes(arcs);
+			out.writeBytes("}");
+		} catch (IOException e) {
+			//...
 		}
-		out.writeBytes(nodes);
-		out.writeBytes(arcs);
-		out.writeBytes("}");
-		out.close();
 	}
 
 	public static Graphe divGraph1(int nb, boolean visu) {
@@ -193,7 +203,7 @@ class Graphe {
 		for (int i = 2; i <= nb; i++) {
 			Node N = new Node(i);
 			if (i % 2 == 0 && visu) {
-				N.setColor("red");
+				N.setColor(RED);
 			}
 			G.addNode(N);
 		}
@@ -203,9 +213,9 @@ class Graphe {
 			for (int j = 2; j <= nb; j++)
 
 				if (i % j == 0) {
-					Node N1 = G.getNode(i);
-					Node N2 = G.getNode(j);
-					Arc A = new Arc(N2, N1);
+					Node n1 = G.getNode(i);
+					Node n2 = G.getNode(j);
+					Arc A = new Arc(n2, n1);
 					if (visu) {
 						int div = i / j;
 						String label = div + "";
@@ -221,76 +231,70 @@ class Graphe {
 	/* parcours en largeur */
 	public void parcoursLargeur(boolean visu) {
 		// couleur noire (inexplorée) pour tous les noeuds
-		for (Iterator I = S.iterator(); I.hasNext();) {
+		for (Iterator I = s.iterator(); I.hasNext();) {
 			Node N = (Node) I.next();
-			N.setColor("black");
+			N.setColor(BLACK);
 		}
 		// parcours à partir d'une source inexplorée
-		for (Iterator I = this.S.iterator(); I.hasNext();) {
+		for (Iterator I = this.s.iterator(); I.hasNext();) {
 			Node N = (Node) I.next();
-			if (N.color().equals("black"))
+			if (N.color().equals(BLACK))
 				parcoursLargeur(N, visu);
 		}
 		// remet les sommets en noir
-		for (Iterator I = S.iterator(); I.hasNext();) {
+		for (Iterator I = s.iterator(); I.hasNext();) {
 			Node N = (Node) I.next();
-			N.setColor("black");
+			N.setColor(BLACK);
 		}
 	}
 
 	/* parcours en largeur à partir d'une source */
 	private void parcoursLargeur(Node S, boolean visu) {
-		S.setColor("blue");
+		S.setColor(BLUE);
 		ArrayList F = new ArrayList();
 		F.add(S);
 		while (!F.isEmpty()) {
-			Node N = (Node) F.get(0);
-			for (Iterator I = N.succ().iterator(); I.hasNext();) {
-				Arc A = (Arc) I.next();
-				Node N2 = (Node) A.to();
-				if (N2.color().equals("black")) {
-					if (!F.contains(N2)) {
-						F.add(N2);
+			Node n = (Node) F.get(0);
+			for (Iterator I = n.succ().iterator(); I.hasNext();) {
+				Arc a = (Arc) I.next();
+				Node n2 = a.to();
+				if (n2.color().equals(BLACK)) {
+					if (!F.contains(n2)) {
+						F.add(n2);
 						if (visu)
-							A.setColor("blue");
+							a.setColor(BLUE);
 					}
 				}
 			}
-			F.remove(N);
-			N.setColor("blue");
+			F.remove(n);
+			n.setColor(BLUE);
 		}
 	}
 
 	/* parcours en profondeur */
 	public void parcoursProfondeur(boolean visu) {
 		// couleur noire (inexplorée) pour tous les noeuds
-		for (Iterator I = S.iterator(); I.hasNext();) {
-			Node N = (Node) I.next();
-			N.setColor("black");
+		for (Iterator i = s.iterator(); i.hasNext();) {
+			Node n = (Node) i.next();
+			n.setColor(BLACK);
 		}
 		// parcours à partir d'une source inexplorée
-		for (Iterator I = this.S.iterator(); I.hasNext();) {
-			Node N = (Node) I.next();
-			if (N.color().equals("black"))
-				parcoursProfondeur(N, visu);
+		for (Iterator I = this.s.iterator(); I.hasNext();) {
+			Node n = (Node) I.next();
+			if (n.color().equals(BLACK))
+				parcoursProfondeur(n, visu);
 		}
-		// remettre les sommets en noir
-		/*
-		 * for (Iterator I=S.iterator(); I.hasNext(); ) { Node N = (Node)
-		 * I.next(); N.setColor("black"); }
-		 */
 	}
 
 	/* parcours en profondeur récursif à partir d'une source */
 	private void parcoursProfondeur(Node S, boolean visu) {
-		S.setColor("red");
+		S.setColor(RED);
 		for (Iterator I = S.succ().iterator(); I.hasNext();) {
 			Arc A = (Arc) I.next();
-			// A.setNode("black");
-			Node N = (Node) A.to();
-			if (!N.color().equals("red")) {
+			Node N = A.to();
+			if (!N.color().equals(RED)) {
 				if (visu)
-					A.setColor("green");
+					A.setColor(GREEN);
 				parcoursProfondeur(N, visu);
 			}
 		}
@@ -299,29 +303,29 @@ class Graphe {
 	/**********************************************************/
 	/** méthode statique de génération d'un graphe aléatoire **/
 	public static Graphe randomGraphe(int nb) {
-		Graphe G = new Graphe();
+		Graphe g = new Graphe();
 		// ensemble S de Node
 		int i = nb;
 		while (i > 0) {
-			int id = (int) Math.rint(10 * nb * Math.random());
-			if (G.addNode(new Node(id)))
+			int id = 10 * nb * random.nextInt();
+			if (g.addNode(new Node(id)))
 				i--;
 		}
 		// ensemble A d'Arcs
-		for (Iterator I = G.getS().iterator(); I.hasNext();) {
-			Node N1 = (Node) I.next();
-			for (Iterator J = G.getS().iterator(); J.hasNext();) {
-				Node N2 = (Node) J.next();
-				int choice = (int) Math.rint(10 * Math.random());
+		for (Iterator I = g.getS().iterator(); I.hasNext();) {
+			Node n1 = (Node) I.next();
+			for (Iterator J = g.getS().iterator(); J.hasNext();) {
+				Node n2 = (Node) J.next();
+				int choice = 10 * random.nextInt();
 				/*
 				 * choice compris entre 0 et 10. si choice < 5: on n'ajoute pas
-				 * l'arc (N1,N2) si choice > 5: on ajoute l'arc
+				 * l'arc (n1,n2) si choice > 5: on ajoute l'arc
 				 */
-				if (choice > 5 && N1 != N2)
-					G.addArc(new Arc(N1, N2));
+				if (choice > 5 && n1 != n2)
+					g.addArc(new Arc(n1, n2));
 			}
 		}
-		return G;
+		return g;
 	}
 	
 	
@@ -332,19 +336,19 @@ class Graphe {
 		// ensemble S de Node
 		int i = nb;
 		while (i > 0) {
-			int id = (int) Math.rint(10 * nb * Math.random());
-			if (G.addNode(new Node(id, "n" + id))==true)
+			int id = 10 * nb * random.nextInt();
+			if (G.addNode(new Node(id, "n" + id)))
 				i--;
 		}
 		// ensemble A d'Arcs
 		for (Iterator I = G.getS().iterator(); I.hasNext();) {
-			Node N1 = (Node) I.next();
+			Node n1 = (Node) I.next();
 			for (Iterator J = G.getS().iterator(); J.hasNext();) {
-				Node N2 = (Node) J.next();
-				if (N2.id() > N1.id()) {
-					int choice = (int) Math.rint(10 * Math.random());
+				Node n2 = (Node) J.next();
+				if (n2.id() > n1.id()) {
+					int choice = 10 * random.nextInt();
 					if (choice > 5){
-						Arc A = new Arc(N1, N2);
+						Arc A = new Arc(n1, n2);
 						int il = A.from().id();
 						int jl = A.to().id();
 						if (G.containsNode(il))
@@ -363,11 +367,11 @@ class Graphe {
 
 	/************************/
 	/** calcul des sources **/
-	public TreeSet sources(boolean visu) {
-		TreeSet sources = new TreeSet();
-		for (Iterator I = S.iterator(); I.hasNext();) {
+	public SortedSet sources(boolean visu) {
+		SortedSet sources = new TreeSet();
+		for (Iterator I = s.iterator(); I.hasNext();) {
 			Node N = (Node) I.next();
-			if (N.pred().size() == 0) {
+			if (N.pred().isEmpty()) {
 
 				sources.add(N);
 				if (visu)
@@ -378,12 +382,13 @@ class Graphe {
 	}
 
 	/** calcul d'un tri topologique **/
-	public ArrayList triTopologique(boolean visu) {
-		TreeSet sources = this.sources(visu);
-		ArrayList choisis = new ArrayList();
-		while (sources.size() != 0) {
+	public List triTopologique(boolean visu) {
+		
+		SortedSet sources = this.sources(visu);
+		List choisis = new ArrayList();
+		while (!sources.isEmpty()) {
 			// choix d'un Node dans sources
-			int nb = (int) (Math.random() * sources.size());
+			int nb = (random.nextInt() * sources.size());
 			if (nb == 0)
 				nb++;
 			Node Nx = null;
@@ -412,7 +417,7 @@ class Graphe {
 				if (ajouty) {
 					sources.add(Ny);
 					if (visu)
-						Ax.setColor("red");
+						Ax.setColor(RED);
 				}
 			}
 		}
@@ -421,13 +426,13 @@ class Graphe {
 
 	// test de l'existence d'un cycle
 	public boolean cycles(boolean visu) {
-		ArrayList T = this.triTopologique(false);
+		List T = this.triTopologique(false);
 		if (T.size() != this.nbNodes()) {
 			if (visu) {
 				for (Iterator I = this.getS().iterator(); I.hasNext();) {
 					Node N = (Node) I.next();
 					if (!T.contains(N))
-						N.setColor("blue");
+						N.setColor(BLUE);
 				}
 			}
 			return true;

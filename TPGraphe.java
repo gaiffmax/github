@@ -1,4 +1,4 @@
-package Metrique;
+package metrique;
 import java.io.*; 
 import java.util.*;
 import java.io.*;
@@ -14,7 +14,7 @@ public class TPGraphe {
 		G1.parcoursProfondeur(true);
 		Graphe.toDot(G1,"profDiv.dot");
 		G1.setColor("black");
-		ArrayList L = G1.triTopologique(true); 
+		List L = G1.triTopologique(true); 
 		System.out.println(L);
 		Graphe.toDot(G1,"profDiv.dot");
 

@@ -1,4 +1,4 @@
-package Metrique;
+package metrique;
 /*****************************************************/
 import java.util.*;
 /** Classe pour manipuler un noeud d'un graphe **/
