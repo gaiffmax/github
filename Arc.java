@@ -80,6 +80,7 @@ public class Arc implements Comparable {
     
     /** methode d'affichage grammaire dot **/
     public String toDot2 () {
+	System.out.println("test");
 	String arc = this.toString();
 	// gestion des attributs dot
 	String label = "";
